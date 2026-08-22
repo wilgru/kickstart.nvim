@@ -1,18 +1,17 @@
--- debug.lua
+-- Debugging support via nvim-dap (Debug Adapter Protocol)
 --
--- Shows how to use the DAP plugin to debug your code.
+-- Disabled by default: enable by uncommenting the matching require line in your init.lua.
 --
 -- Primarily focused on configuring the debugger for Go, but can
--- be extended to other languages as well. That's why it's called
--- kickstart.nvim and not kitchen-sink.nvim ;)
+-- be extended to other languages as well.
+local gh = require('config.util').gh
 
 vim.pack.add {
-  'https://github.com/mfussenegger/nvim-dap',
-  'https://github.com/rcarriga/nvim-dap-ui',
-  'https://github.com/nvim-neotest/nvim-nio',
-  'https://github.com/mason-org/mason.nvim',
-  'https://github.com/jay-babu/mason-nvim-dap.nvim',
-  'https://github.com/leoluz/nvim-dap-go',
+  gh 'mfussenegger/nvim-dap',
+  gh 'rcarriga/nvim-dap-ui',
+  gh 'nvim-neotest/nvim-nio',
+  gh 'jay-babu/mason-nvim-dap.nvim',
+  gh 'leoluz/nvim-dap-go',
 }
 
 -- Basic debugging keymaps, feel free to change to your liking!
@@ -73,7 +72,7 @@ dapui.setup {
 -- vim.api.nvim_set_hl(0, 'DapBreak', { fg = '#e51400' })
 -- vim.api.nvim_set_hl(0, 'DapStop', { fg = '#ffcc00' })
 -- local breakpoint_icons = vim.g.have_nerd_font
---     and { Breakpoint = '', BreakpointCondition = '', BreakpointRejected = '', LogPoint = '', Stopped = '' }
+--     and { Breakpoint = '', BreakpointCondition = '', BreakpointRejected = '', LogPoint = '', Stopped = '' }
 --   or { Breakpoint = '●', BreakpointCondition = '⊜', BreakpointRejected = '⊘', LogPoint = '◆', Stopped = '⭔' }
 -- for type, icon in pairs(breakpoint_icons) do
 --   local tp = 'Dap' .. type

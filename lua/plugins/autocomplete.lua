@@ -77,4 +77,9 @@ do
     -- Shows a signature help window while you type arguments for a function
     signature = { enabled = true },
   }
+
+  -- [[ Autopairs ]]
+  -- https://github.com/windwp/nvim-autopairs
+  vim.pack.add { gh 'windwp/nvim-autopairs' }
+  require('nvim-autopairs').setup {}
 end

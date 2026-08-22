@@ -84,8 +84,6 @@ I hope you enjoy your Neovim journey,
 P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
-
-
 -- vim.pack intro, build hooks
 do
   -- [[ Intro to `vim.pack` ]]
@@ -101,7 +99,6 @@ do
   --
   --  To update plugins, run
   --    :lua vim.pack.update()
-  --
   --
   --  Throughout the rest of the config there will be examples
   --  of how to install and configure plugins using `vim.pack`.
@@ -158,30 +155,10 @@ require('plugins.lsp')
 require('plugins.formatting')
 require('plugins.autocomplete')
 require('plugins.treesitter')
+-- require('plugins.debug') -- Uncomment to enable DAP debugging support (Go-focused)
 
--- OPTIONAL EXAMPLES / NEXT STEPS - kickstart.plugins.* examples
-do
-  -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
-  -- init.lua. If you want these files, they are in the repository, so you can just download them and
-  -- place them in the correct locations.
-
-  -- NOTE: Next step on your Neovim journey: Add/Configure additional plugins for Kickstart
-  --
-  --  Here are some example plugins that I've included in the Kickstart repository.
-  --  Uncomment any of the lines below to enable them (you will need to restart nvim).
-  --
-  -- require 'kickstart.plugins.debug'
-  -- require 'kickstart.plugins.indent_line'
-  -- require 'kickstart.plugins.lint'
-  -- require 'kickstart.plugins.autopairs'
-  -- require 'kickstart.plugins.neo-tree'
-  -- require 'kickstart.plugins.gitsigns' -- adds gitsigns recommended keymaps
-
-  -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
-  --
-  --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
-end
+-- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
+-- require('custom.plugins')
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
