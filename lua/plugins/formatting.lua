@@ -11,6 +11,13 @@ do
       local enabled_filetypes = {
         -- lua = true,
         -- python = true,
+        javascript = true,
+        javascriptreact = true,
+        typescript = true,
+        typescriptreact = true,
+        json = true,
+        jsonc = true,
+        css = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
         return { timeout_ms = 500 }
@@ -28,7 +35,13 @@ do
       -- python = { "isort", "black" },
       --
       -- You can use 'stop_after_first' to run the first available formatter from the list
-      -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      javascript = { 'prettierd', 'prettier', stop_after_first = true },
+      javascriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+      typescript = { 'prettierd', 'prettier', stop_after_first = true },
+      typescriptreact = { 'prettierd', 'prettier', stop_after_first = true },
+      json = { 'prettierd', 'prettier', stop_after_first = true },
+      jsonc = { 'prettierd', 'prettier', stop_after_first = true },
+      css = { 'prettierd', 'prettier', stop_after_first = true },
     },
   }
 
@@ -40,6 +53,10 @@ do
   local lint = require 'lint'
   lint.linters_by_ft = {
     markdown = { 'markdownlint' }, -- Make sure to install `markdownlint` via mason / npm
+    javascript = { 'eslint_d' },
+    javascriptreact = { 'eslint_d' },
+    typescript = { 'eslint_d' },
+    typescriptreact = { 'eslint_d' },
   }
 
   -- To allow other plugins to add linters to require('lint').linters_by_ft,

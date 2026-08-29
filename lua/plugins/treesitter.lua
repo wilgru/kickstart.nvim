@@ -1,6 +1,16 @@
 -- Parser installation, syntax highlighting, folds, indentation
 local gh = require('config.util').gh
 
+-- Auto-close and auto-rename JSX/HTML tags
+vim.pack.add { gh 'windwp/nvim-ts-autotag' }
+require('nvim-ts-autotag').setup {
+  opts = {
+    enable_close = true,        -- Auto-close tags
+    enable_rename = true,       -- Auto-rename paired tags
+    enable_close_on_slash = false, -- Disable close on trailing </
+  },
+}
+
 do
   -- [[ Configure Treesitter ]]
   --  Used to highlight, edit, and navigate code
