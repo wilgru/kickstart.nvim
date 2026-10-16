@@ -18,6 +18,7 @@ do
         json = true,
         jsonc = true,
         css = true,
+        openscad = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
         return { timeout_ms = 500 }

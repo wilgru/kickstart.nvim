@@ -155,6 +155,7 @@ require('plugins.lsp')
 require('plugins.formatting')
 require('plugins.autocomplete')
 require('plugins.treesitter')
+require('plugins.openscad')
 -- require('plugins.debug') -- Uncomment to enable DAP debugging support (Go-focused)
 
 -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
