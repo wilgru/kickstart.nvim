@@ -86,6 +86,7 @@ do
     -- Delay between pressing a key and opening which-key (milliseconds)
     delay = 0,
     icons = { mappings = vim.g.have_nerd_font },
+    win = { border = 'rounded' },
     -- Document existing key chains
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
@@ -124,9 +125,14 @@ do
       all = {
         ['@lsp.type.variable.lua'] = { link = '@variable' },
         ['@property.lua'] = { link = '@variable.member' },
-        WhichKeyNormal = { fg = 'fg1', bg = palette.black.base },
-        WhichKeyBorder = { fg = palette.gray.base, bg = palette.black.base },
-        WhichKeyTitle = { fg = 'fg1', bg = palette.black.base },
+        WhichKeyNormal = { fg = 'fg1', bg = 'NONE' },
+        WhichKeyBorder = { fg = 'fg1', bg = 'NONE' },
+        WhichKeyTitle = { fg = 'fg1', bg = 'NONE' },
+        StatusLine = { fg = 'fg1', bg = 'NONE' },
+        StatusLineNC = { fg = palette.gray.base, bg = 'NONE' },
+        MiniStatuslineDevinfo = { fg = 'fg1', bg = 'NONE' },
+        MiniStatuslineFileinfo = { fg = 'fg1', bg = 'NONE' },
+        MiniStatuslineFilename = { fg = 'fg1', bg = 'NONE' },
       },
     },
   }
