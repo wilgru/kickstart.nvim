@@ -168,26 +168,25 @@ do
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
 
-  -- [[ Neo-tree ]]
-  -- Neovim plugin to browse the file system
-  -- https://github.com/nvim-neo-tree/neo-tree.nvim
-  vim.pack.add {
-    { src = gh 'nvim-neo-tree/neo-tree.nvim', version = vim.version.range '*' },
-    gh 'nvim-lua/plenary.nvim',
-    gh 'MunifTanjim/nui.nvim',
-  }
-
-  vim.keymap.set('n', '\\', '<Cmd>Neotree reveal<CR>', { desc = 'NeoTree reveal', silent = true })
-
-  require('neo-tree').setup {
-    filesystem = {
-      window = {
-        mappings = {
-          ['\\'] = 'close_window',
-        },
+  -- [[ Fyler ]]
+  -- Browse and edit the file system as a tree in the current window
+  vim.pack.add { gh 'FylerOrg/fyler.nvim' }
+  local fyler = require 'fyler'
+  fyler.setup {
+    kind = 'replace',
+    win_opts = {
+      number = true,
+      relativenumber = true,
+    },
+    integrations = { icon = vim.g.have_nerd_font and 'mini_icons' or nil },
+    mappings = {
+      n = {
+        ['\\'] = { action = 'close', desc = 'Close file explorer' },
       },
     },
   }
+
+  vim.keymap.set('n', '\\', function() fyler.toggle() end, { desc = 'Toggle file explorer' })
 
   -- [[ Indent guides ]]
   -- Add indentation guides even on blank lines
