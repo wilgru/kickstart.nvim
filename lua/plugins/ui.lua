@@ -130,13 +130,47 @@ do
         WhichKeyTitle = { fg = 'fg1', bg = 'NONE' },
         StatusLine = { fg = 'fg1', bg = 'NONE' },
         StatusLineNC = { fg = palette.gray.base, bg = 'NONE' },
+        MsgArea = { fg = palette.gray.base, bg = 'NONE' },
         MiniStatuslineDevinfo = { fg = 'fg1', bg = 'NONE' },
-        MiniStatuslineFileinfo = { fg = 'fg1', bg = 'NONE' },
+        MiniStatuslineBranch = { fg = palette.green.bright, bg = 'NONE' },
+        MiniStatuslineGitAdded = { fg = palette.green.bright, bg = 'NONE' },
+        MiniStatuslineGitChanged = { fg = palette.blue.base, bg = 'NONE' },
+        MiniStatuslineGitRemoved = { fg = palette.red.base, bg = 'NONE' },
+        MiniStatuslineModified = { fg = palette.yellow.base, bg = 'NONE' },
+        MiniStatuslineFileinfo = { fg = palette.gray.base, bg = 'NONE' },
         MiniStatuslineFilename = { fg = 'fg1', bg = 'NONE' },
+        MiniStatuslineCommand = { fg = '#000000', bg = palette.gray.base },
+        MiniStatuslineCommandCap = { fg = palette.gray.base, bg = 'NONE' },
       },
     },
   }
   vim.cmd.colorscheme 'github_dark_high_contrast'
+
+  vim.api.nvim_create_autocmd({ 'CmdlineEnter', 'CmdlineLeave' }, {
+    group = vim.api.nvim_create_augroup('CommandLineColors', { clear = true }),
+    callback = function(event)
+      local typing = event.event == 'CmdlineEnter' or (vim.v.event.cmdlevel or 0) > 1
+      local fg = typing and vim.api.nvim_get_hl(0, { name = 'Normal', link = false }).fg or palette.gray.base
+      vim.api.nvim_set_hl(0, 'MsgArea', { fg = fg, bg = 'NONE' })
+    end,
+  })
+
+  local message_timer = assert(vim.uv.new_timer())
+  vim.on_key(function()
+    message_timer:start(4000, 0, vim.schedule_wrap(function()
+      local mode = vim.api.nvim_get_mode()
+      if vim.fn.getcmdtype() ~= '' or mode.blocking then return end
+      vim.api.nvim_echo({}, false, {})
+    end))
+  end, vim.api.nvim_create_namespace 'ClearIdleMessages')
+  vim.api.nvim_create_autocmd('VimLeavePre', {
+    group = 'CommandLineColors',
+    callback = function()
+      vim.on_key(nil, vim.api.nvim_create_namespace 'ClearIdleMessages')
+      message_timer:stop()
+      message_timer:close()
+    end,
+  })
 
   -- Highlight todo, notes, etc in comments
   vim.pack.add { gh 'folke/todo-comments.nvim' }
@@ -179,14 +213,118 @@ do
   --  You could remove this setup call if you don't like it,
   --  and try some other statusline plugin
   local statusline = require 'mini.statusline'
+  vim.o.showcmd = true
+  vim.o.showcmdloc = 'statusline'
   -- Set `use_icons` to true if you have a Nerd Font
-  statusline.setup { use_icons = vim.g.have_nerd_font }
+  statusline.setup {
+    use_icons = vim.g.have_nerd_font,
+    content = {
+      active = function()
+        local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+        local mode_block = { hl = mode_hl, strings = { mode } }
+        if vim.g.have_nerd_font then
+          local colors = vim.api.nvim_get_hl(0, { name = mode_hl, link = false })
+          vim.api.nvim_set_hl(0, 'MiniStatuslineModeCap', { fg = colors.bg, bg = 'NONE' })
+          mode_block = '%#MiniStatuslineModeCap#%#' .. mode_hl .. '# ' .. mode .. ' %#MiniStatuslineModeCap#'
+        end
+        local command = vim.api.nvim_eval_statusline('%S', {}).str
+        local command_block = ''
+        if command ~= '' then
+          local left = vim.g.have_nerd_font and '%#MiniStatuslineCommandCap#' or ''
+          local right = vim.g.have_nerd_font and '%#MiniStatuslineCommandCap#' or ''
+          command_block = left .. '%#MiniStatuslineCommand# ' .. command:gsub('%%', '%%%%') .. ' ' .. right
+            .. '%#MiniStatuslineFilename# '
+        end
+        return statusline.combine_groups {
+          mode_block,
+          {
+            hl = 'MiniStatuslineDevinfo',
+            strings = {
+              statusline.section_git { trunc_width = 40 },
+              statusline.section_diff { trunc_width = 75 },
+              statusline.section_diagnostics { trunc_width = 75 },
+            },
+          },
+          '%<',
+          { hl = 'MiniStatuslineFilename', strings = { statusline.section_filename { trunc_width = 140 } } },
+          command_block,
+          '%=',
+          {
+            hl = 'MiniStatuslineFileinfo',
+            strings = {
+              statusline.section_lsp { trunc_width = 75 },
+              statusline.section_fileinfo { trunc_width = 120 },
+              statusline.section_searchcount { trunc_width = 75 },
+              statusline.section_location { trunc_width = 75 },
+            },
+          },
+        }
+      end,
+    },
+  }
 
-  -- You can configure sections in the statusline by overriding their
-  -- default behavior. For example, here we set the section for
-  -- cursor location to LINE:COLUMN
+  local section_git = statusline.section_git
   ---@diagnostic disable-next-line: duplicate-set-field
-  statusline.section_location = function() return '%2l:%-2v' end
+  statusline.section_git = function(args)
+    local branch = section_git(args)
+    if branch == '' then return '' end
+    return '%#MiniStatuslineBranch#' .. branch:gsub('%%', '%%%%') .. '%#MiniStatuslineDevinfo#'
+  end
+
+  local section_filename = statusline.section_filename
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_filename = function(args)
+    local modified = vim.bo.modified and ' %#MiniStatuslineModified#●%#MiniStatuslineFilename#' or ''
+    return (section_filename(args):gsub('%%m', function() return modified end))
+  end
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_diff = function(args)
+    if statusline.is_truncated(args.trunc_width) then return '' end
+    local diff = vim.b.gitsigns_status_dict
+    if not diff then return '' end
+
+    local counts = {}
+    for _, change in ipairs {
+      { 'added', '+', 'MiniStatuslineGitAdded' },
+      { 'changed', '~', 'MiniStatuslineGitChanged' },
+      { 'removed', '-', 'MiniStatuslineGitRemoved' },
+    } do
+      local count = diff[change[1]] or 0
+      if count > 0 then counts[#counts + 1] = '%#' .. change[3] .. '#' .. change[2] .. count .. '%#MiniStatuslineDevinfo#' end
+    end
+    return table.concat(counts, ' ')
+  end
+
+  local section_fileinfo = statusline.section_fileinfo
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_fileinfo = function(args)
+    local info = section_fileinfo(args)
+    if not vim.g.have_nerd_font or statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return info end
+    local format_icons = { unix = '', dos = '', mac = '' }
+    -- Decorate the default encoding[format] size suffix; retain its filetype icon and size formatting.
+    return (info:gsub('(%S*)%[([^%]]+)%] (%S+)$', function(encoding, format, size)
+      if encoding == '' then encoding = vim.o.encoding end
+      local details = {}
+      if encoding ~= 'utf-8' then details[#details + 1] = ' ' .. encoding end
+      if format ~= 'unix' then details[#details + 1] = (format_icons[format] or '') .. ' ' .. format end
+      details[#details + 1] = ' ' .. size:gsub('([KMGTPE])iB$', '%1B')
+      return table.concat(details, '  ')
+    end))
+  end
+
+  local section_searchcount = statusline.section_searchcount
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_searchcount = function(args)
+    local count = section_searchcount(args)
+    if count == '' then return '' end
+    return '%#MiniStatuslineFileinfo#' .. (vim.g.have_nerd_font and ' ' or '') .. count
+  end
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_location = function()
+    return '%#MiniStatuslineFileinfo#' .. (vim.g.have_nerd_font and ' ' or '') .. '%l:%v'
+  end
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
