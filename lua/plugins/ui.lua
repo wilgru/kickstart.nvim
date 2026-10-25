@@ -230,10 +230,8 @@ do
         local command = vim.api.nvim_eval_statusline('%S', {}).str
         local command_block = ''
         if command ~= '' then
-          local left = vim.g.have_nerd_font and '%#MiniStatuslineCommandCap#' or ''
-          local right = vim.g.have_nerd_font and '%#MiniStatuslineCommandCap#' or ''
-          command_block = left .. '%#MiniStatuslineCommand# ' .. command:gsub('%%', '%%%%') .. ' ' .. right
-            .. '%#MiniStatuslineFilename# '
+          local prompt = vim.g.have_nerd_font and '' or '>'
+          command_block = '%#MiniStatuslineFileinfo# ' .. prompt .. ' ' .. command:gsub('%%', '%%%%') .. ' '
         end
         return statusline.combine_groups {
           mode_block,
@@ -274,8 +272,12 @@ do
   local section_filename = statusline.section_filename
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_filename = function(args)
-    local modified = vim.bo.modified and ' %#MiniStatuslineModified#●%#MiniStatuslineFilename#' or ''
-    return (section_filename(args):gsub('%%m', function() return modified end))
+    local icon = ''
+    if vim.g.have_nerd_font and vim.bo.filetype ~= '' and vim.bo.buftype == '' then
+      icon = ' ' .. MiniIcons.get('filetype', vim.bo.filetype)
+    end
+    local modified = vim.bo.modified and '  %#MiniStatuslineModified#%#MiniStatuslineFilename#' or ''
+    return (section_filename(args):gsub('%%m', function() return icon .. modified end))
   end
 
   ---@diagnostic disable-next-line: duplicate-set-field
@@ -300,17 +302,32 @@ do
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_fileinfo = function(args)
     local info = section_fileinfo(args)
-    if not vim.g.have_nerd_font or statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return info end
-    local format_icons = { unix = '', dos = '', mac = '' }
-    -- Decorate the default encoding[format] size suffix; retain its filetype icon and size formatting.
+    if statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return '' end
+    -- Keep only encoding, format, and size; the filetype icon lives after the path.
+    info = info:match('(%S*%[[^%]]+%] %S+)$') or ''
+    if not vim.g.have_nerd_font then return info end
+    -- Decorate the default encoding[format] size suffix.
     return (info:gsub('(%S*)%[([^%]]+)%] (%S+)$', function(encoding, format, size)
       if encoding == '' then encoding = vim.o.encoding end
       local details = {}
       if encoding ~= 'utf-8' then details[#details + 1] = ' ' .. encoding end
-      if format ~= 'unix' then details[#details + 1] = (format_icons[format] or '') .. ' ' .. format end
-      details[#details + 1] = ' ' .. size:gsub('([KMGTPE])iB$', '%1B')
+      if format ~= 'unix' then details[#details + 1] = '󰌑 ' .. format end
+      details[#details + 1] = ' ' .. size:gsub('([KMGTPE])iB$', '%1B')
       return table.concat(details, '  ')
     end))
+  end
+
+  ---@diagnostic disable-next-line: duplicate-set-field
+  statusline.section_lsp = function(args)
+    if statusline.is_truncated(args.trunc_width) then return '' end
+    local names = {}
+    for _, client in ipairs(vim.lsp.get_clients { bufnr = 0 }) do
+      names[#names + 1] = client.name
+    end
+    if #names == 0 then return '' end
+    table.sort(names)
+    local icon = vim.g.have_nerd_font and '󰰎' or 'LSP'
+    return icon .. ' ' .. table.concat(names, ', '):gsub('%%', '%%%%')
   end
 
   local section_searchcount = statusline.section_searchcount
