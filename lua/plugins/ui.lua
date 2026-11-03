@@ -252,8 +252,8 @@ do
             strings = {
               statusline.section_lsp { trunc_width = 75 },
               statusline.section_fileinfo { trunc_width = 120 },
-              statusline.section_searchcount { trunc_width = 75 },
               statusline.section_location { trunc_width = 75 },
+              statusline.section_searchcount { trunc_width = 75 },
             },
           },
         }
@@ -352,14 +352,9 @@ do
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_lsp = function(args)
     if statusline.is_truncated(args.trunc_width) then return '' end
-    local names = {}
-    for _, client in ipairs(vim.lsp.get_clients { bufnr = 0 }) do
-      names[#names + 1] = client.name
-    end
-    if #names == 0 then return '' end
-    table.sort(names)
-    local icon = vim.g.have_nerd_font and '󰰎' or 'LSP'
-    return icon .. ' ' .. table.concat(names, ', '):gsub('%%', '%%%%')
+    local count = #vim.lsp.get_clients { bufnr = 0 }
+    if count == 0 then return '' end
+    return count .. (count == 1 and ' LSP' or ' LSPs')
   end
 
   local section_searchcount = statusline.section_searchcount
