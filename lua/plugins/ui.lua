@@ -233,7 +233,7 @@ do
           local prompt = vim.g.have_nerd_font and '' or '>'
           command_block = '%#MiniStatuslineFileinfo# ' .. prompt .. ' ' .. command:gsub('%%', '%%%%') .. ' '
         end
-        return statusline.combine_groups {
+        local groups = {
           mode_block,
           {
             hl = 'MiniStatuslineDevinfo',
@@ -246,7 +246,7 @@ do
           '%<',
           { hl = 'MiniStatuslineFilename', strings = { statusline.section_filename { trunc_width = 140 } } },
           command_block,
-          '%=',
+          '', -- Measure without alignment padding before deciding whether to clip.
           {
             hl = 'MiniStatuslineFileinfo',
             strings = {
@@ -257,15 +257,42 @@ do
             },
           },
         }
+        local function display_width(text)
+          return vim.api.nvim_eval_statusline(text, { maxwidth = 100000 }).width
+        end
+        local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
+        local overflow = display_width(statusline.combine_groups(groups)) - width
+        if overflow > 0 then
+          local branch_width = display_width(groups[2].strings[1])
+          local filename_width = display_width(groups[4].strings[1])
+          -- Share the necessary clipping between the branch and path.
+          local branch_trim = math.min(math.max(0, branch_width - 1), math.ceil(overflow * branch_width / math.max(1, branch_width + filename_width)))
+          groups[2].strings[1] = statusline.section_git { trunc_width = 40, trim_width = branch_trim }
+          groups[4].strings[1] = statusline.section_filename { trunc_width = 140, trim_width = overflow - branch_trim }
+        end
+        groups[6] = '%='
+        return statusline.combine_groups(groups)
       end,
     },
   }
+
+  -- Clip display text before escaping statusline syntax; preserve UTF-8 characters.
+  local function clip(text, max_width, from_start)
+    max_width = math.max(1, max_width)
+    if vim.fn.strdisplaywidth(text) <= max_width then return text end
+    while vim.fn.strdisplaywidth(text) > max_width - 1 do
+      local length = vim.fn.strchars(text)
+      text = vim.fn.strcharpart(text, from_start and 1 or 0, length - 1)
+    end
+    return from_start and ('…' .. text) or (text .. '…')
+  end
 
   local section_git = statusline.section_git
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_git = function(args)
     local branch = section_git(args)
     if branch == '' then return '' end
+    branch = clip(branch, vim.fn.strdisplaywidth(branch) - (args.trim_width or 0), false)
     return '%#MiniStatuslineBranch#' .. branch:gsub('%%', '%%%%') .. '%#MiniStatuslineDevinfo#'
   end
 
@@ -277,7 +304,12 @@ do
       icon = ' ' .. MiniIcons.get('filetype', vim.bo.filetype)
     end
     local modified = vim.bo.modified and '  %#MiniStatuslineModified#%#MiniStatuslineFilename#' or ''
-    return (section_filename(args):gsub('%%m', function() return icon .. modified end))
+    local filename = section_filename(args):gsub('%%m', function() return icon .. modified end)
+    return (filename:gsub('%%[fFt]', function(item)
+      local path = vim.api.nvim_eval_statusline(item, {}).str
+      local max_width = vim.fn.strdisplaywidth(path) - (args.trim_width or 0)
+      return clip(path, max_width, true):gsub('%%', '%%%%')
+    end))
   end
 
   ---@diagnostic disable-next-line: duplicate-set-field
