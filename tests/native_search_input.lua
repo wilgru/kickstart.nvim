@@ -1,4 +1,4 @@
--- Run with the regular config in headless Neovim, like native_search.lua.
+-- Run: sh tests/run.sh tests/native_search_input.lua
 local picker = require 'config.search'
 local api = vim.api
 picker.open {

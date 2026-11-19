@@ -146,10 +146,11 @@ do
   })
 end
 
-require('config.keymaps')
 require('config.options')
+require('config.keymaps')
 
 require('plugins.ui')
+require('config.actions').setup()
 require('plugins.search')
 require('plugins.lsp')
 require('plugins.formatting')

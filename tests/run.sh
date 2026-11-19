@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+
+# Resolve paths from the repository root, regardless of the caller's directory.
+cd "$(dirname "$0")/.."
+
+if [ "$#" -eq 0 ]; then
+  set -- tests/native_search.lua tests/native_search_input.lua \
+    tests/native_search_keymaps.lua tests/navigation_keymaps.lua tests/action_keymaps.lua
+fi
+
+for test_file do
+  NVIM_TEST_FILE="$test_file" nvim -n -i NONE --headless '+lua dofile("tests/run.lua")'
+done

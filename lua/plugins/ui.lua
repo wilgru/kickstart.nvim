@@ -57,20 +57,20 @@ do
 
       -- Actions
       -- visual mode
-      map('v', '<leader>hs', function() gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' } end, { desc = 'git [s]tage hunk' })
-      map('v', '<leader>hr', function() gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' } end, { desc = 'git [r]eset hunk' })
+      map('v', '<leader>gs', function() gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' } end, { desc = 'git [s]tage hunk' })
+      map('v', '<leader>gr', function() gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' } end, { desc = 'git [r]eset hunk' })
       -- normal mode
-      map('n', '<leader>hs', gitsigns.stage_hunk, { desc = 'git [s]tage hunk' })
-      map('n', '<leader>hr', gitsigns.reset_hunk, { desc = 'git [r]eset hunk' })
-      map('n', '<leader>hS', gitsigns.stage_buffer, { desc = 'git [S]tage buffer' })
-      map('n', '<leader>hR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
-      map('n', '<leader>hp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
-      map('n', '<leader>hi', gitsigns.preview_hunk_inline, { desc = 'git preview hunk [i]nline' })
-      map('n', '<leader>hb', function() gitsigns.blame_line { full = true } end, { desc = 'git [b]lame line' })
-      map('n', '<leader>hd', gitsigns.diffthis, { desc = 'git [d]iff against index' })
-      map('n', '<leader>hD', function() gitsigns.diffthis '@' end, { desc = 'git [D]iff against last commit' })
-      map('n', '<leader>hQ', function() gitsigns.setqflist 'all' end, { desc = 'git hunk [Q]uickfix list (all files in repo)' })
-      map('n', '<leader>hq', gitsigns.setqflist, { desc = 'git hunk [q]uickfix list (all changes in this file)' })
+      map('n', '<leader>gs', gitsigns.stage_hunk, { desc = 'git [s]tage hunk' })
+      map('n', '<leader>gr', gitsigns.reset_hunk, { desc = 'git [r]eset hunk' })
+      map('n', '<leader>gS', gitsigns.stage_buffer, { desc = 'git [S]tage buffer' })
+      map('n', '<leader>gR', gitsigns.reset_buffer, { desc = 'git [R]eset buffer' })
+      map('n', '<leader>gp', gitsigns.preview_hunk, { desc = 'git [p]review hunk' })
+      map('n', '<leader>gi', gitsigns.preview_hunk_inline, { desc = 'git preview hunk [i]nline' })
+      map('n', '<leader>gb', function() gitsigns.blame_line { full = true } end, { desc = 'git [b]lame line' })
+      map('n', '<leader>gd', gitsigns.diffthis, { desc = 'git [d]iff against index' })
+      map('n', '<leader>gD', function() gitsigns.diffthis '@' end, { desc = 'git [D]iff against last commit' })
+      map('n', '<leader>gQ', function() gitsigns.setqflist 'all' end, { desc = 'git hunk [Q]uickfix list (all files in repo)' })
+      map('n', '<leader>gq', gitsigns.setqflist, { desc = 'git hunk [q]uickfix list (all changes in this file)' })
       -- Toggles
       map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
       map('n', '<leader>tw', gitsigns.toggle_word_diff, { desc = '[T]oggle git intra-line [w]ord diff' })
@@ -85,17 +85,15 @@ do
   require('which-key').setup {
     -- Delay between pressing a key and opening which-key (milliseconds)
     delay = 0,
-    -- s is a built-in Vim key, so explicitly allow it as a popup prefix.
-    triggers = { { '<auto>', mode = 'nxso' }, { 's', mode = 'nx' } },
     icons = { mappings = vim.g.have_nerd_font },
     win = { border = 'rounded' },
     -- Document existing key chains
     spec = {
-      { 's', group = 'Search', mode = { 'n', 'x' } },
-      { 'gs', group = 'Surround tools', mode = { 'n' } },
-      { '<leader>t', group = '[T]oggle' },
-      { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
-      { 'gr', group = 'LSP Actions', mode = { 'n' } },
+      { '<leader>s', group = 'Search', mode = { 'n', 'x' } },
+      { '<leader>t', group = '[T]oggle', mode = { 'n', 'x' } },
+      { '<leader>g', group = 'Git', mode = { 'n', 'x' } },
+      { 'g', group = 'Go to' },
+      { 'gr', group = 'LSP navigation' },
     },
   }
 
@@ -218,7 +216,7 @@ do
       replace = 'cs',
       find = 'gsf',
       find_left = 'gsF',
-      highlight = 'gsh',
+      highlight = '<leader>is',
     },
   }
 
@@ -409,12 +407,12 @@ do
     integrations = { icon = vim.g.have_nerd_font and 'mini_icons' or nil },
     mappings = {
       n = {
-        ['\\'] = { action = 'close', desc = 'Close file explorer' },
+        ['<leader>f'] = { action = 'close', desc = 'Close file explorer' },
       },
     },
   }
 
-  vim.keymap.set('n', '\\', function() fyler.toggle() end, { desc = 'Toggle file explorer' })
+  vim.keymap.set('n', '<leader>f', function() fyler.toggle() end, { desc = 'Toggle file explorer' })
 
   -- [[ Indent guides ]]
   -- Add indentation guides even on blank lines

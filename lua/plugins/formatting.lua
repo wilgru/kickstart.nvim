@@ -46,7 +46,7 @@ do
     },
   }
 
-  vim.keymap.set({ 'n', 'v' }, '<leader>f', function() require('conform').format { async = true } end, { desc = '[F]ormat buffer' })
+  vim.keymap.set({ 'n', 'x' }, '<leader>cf', function() require('conform').format { async = true } end, { desc = 'Format buffer / selection' })
 
   -- [[ Linting ]]
   vim.pack.add { gh 'mfussenegger/nvim-lint' }

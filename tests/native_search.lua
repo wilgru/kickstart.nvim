@@ -1,4 +1,4 @@
--- Run: nvim --headless '+lua dofile("tests/native_search.lua")' +qa!
+-- Run: sh tests/run.sh tests/native_search.lua
 local picker = require 'config.search'
 local sources = require 'config.search_sources'
 local api = vim.api

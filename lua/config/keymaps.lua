@@ -8,6 +8,27 @@ do
   --  See `:help hlsearch`
   vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+  -- Code-changing LSP actions live under <leader>c; navigation stays on g.
+  for _, key in ipairs { 'grn', 'grx', 'gra' } do pcall(vim.keymap.del, 'n', key) end
+  pcall(vim.keymap.del, 'x', 'gra')
+
+  -- Add toggle-menu shortcuts without disabling Vim's native editing commands.
+  local function alias_mapping(mode, from, to)
+    local mapping = vim.fn.maparg(from, mode, false, true)
+    if not mapping.callback and not mapping.rhs then return end
+    vim.keymap.set(mode, to, mapping.callback or mapping.rhs, {
+      expr = mapping.expr == 1,
+      remap = mapping.noremap == 0,
+      silent = mapping.silent == 1,
+      desc = mapping.desc,
+    })
+  end
+  alias_mapping('n', 'gc', '<leader>tc')
+  alias_mapping('n', 'gcc', '<leader>tcc')
+  alias_mapping('x', 'gc', '<leader>tc')
+  vim.keymap.set({ 'n', 'x' }, '<leader>t~', 'g~', { desc = 'Toggle case' })
+  vim.keymap.set('n', '<leader>t~~', 'g~~', { desc = 'Toggle line case' })
+
   -- Diagnostic Config & Keymaps
   --  See `:help vim.diagnostic.Opts`
   vim.diagnostic.config {
