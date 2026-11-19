@@ -85,11 +85,14 @@ do
   require('which-key').setup {
     -- Delay between pressing a key and opening which-key (milliseconds)
     delay = 0,
+    -- s is a built-in Vim key, so explicitly allow it as a popup prefix.
+    triggers = { { '<auto>', mode = 'nxso' }, { 's', mode = 'nx' } },
     icons = { mappings = vim.g.have_nerd_font },
     win = { border = 'rounded' },
     -- Document existing key chains
     spec = {
-      { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
+      { 's', group = 'Search', mode = { 'n', 'x' } },
+      { 'gs', group = 'Surround tools', mode = { 'n' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
@@ -204,10 +207,20 @@ do
 
   -- Add/delete/replace surroundings (brackets, quotes, etc.)
   --
-  -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-  -- - sd'   - [S]urround [D]elete [']quotes
-  -- - sr)'  - [S]urround [R]eplace [)] [']
-  require('mini.surround').setup()
+  -- - ysiw) - surround inner word with parentheses
+  -- - ds'   - delete surrounding quotes
+  -- - cs)'  - change surrounding parentheses to quotes
+  -- Keep bare s available for search; cl is Vim's equivalent substitute action.
+  require('mini.surround').setup {
+    mappings = {
+      add = 'ys',
+      delete = 'ds',
+      replace = 'cs',
+      find = 'gsf',
+      find_left = 'gsF',
+      highlight = 'gsh',
+    },
+  }
 
   -- Simple and easy statusline.
   --  You could remove this setup call if you don't like it,
@@ -221,11 +234,21 @@ do
     content = {
       active = function()
         local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
+        local search = package.loaded['config.search']
+        local search_title = search and search.status()
+        if search_title then mode, mode_hl = 'Search', 'MiniStatuslineModeNormal' end
         local mode_block = { hl = mode_hl, strings = { mode } }
         if vim.g.have_nerd_font then
           local colors = vim.api.nvim_get_hl(0, { name = mode_hl, link = false })
           vim.api.nvim_set_hl(0, 'MiniStatuslineModeCap', { fg = colors.bg, bg = 'NONE' })
           mode_block = '%#MiniStatuslineModeCap#%#' .. mode_hl .. '# ' .. mode .. ' %#MiniStatuslineModeCap#'
+        end
+        if search_title then
+          return statusline.combine_groups {
+            mode_block,
+            { hl = 'MiniStatuslineDevinfo', strings = { search_title } },
+            '%=',
+          }
         end
         local command = vim.api.nvim_eval_statusline('%S', {}).str
         local command_block = ''
