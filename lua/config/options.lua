@@ -24,6 +24,9 @@ do
   --  Experiment for yourself to see if you like it!
   vim.o.relativenumber = true
 
+  -- Hide end-of-buffer tilde markers in editor and explorer windows.
+  vim.opt.fillchars:append { eob = ' ' }
+
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
 
@@ -84,4 +87,3 @@ do
   -- See `:help 'confirm'`
   vim.o.confirm = true
 end
-

@@ -72,8 +72,8 @@ do
       map('n', '<leader>gQ', function() gitsigns.setqflist 'all' end, { desc = 'git hunk [Q]uickfix list (all files in repo)' })
       map('n', '<leader>gq', gitsigns.setqflist, { desc = 'git hunk [q]uickfix list (all changes in this file)' })
       -- Toggles
-      map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle git show [b]lame line' })
-      map('n', '<leader>tw', gitsigns.toggle_word_diff, { desc = '[T]oggle git intra-line [w]ord diff' })
+      map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = 'Toggle Git line blame' })
+      map('n', '<leader>tw', gitsigns.toggle_word_diff, { desc = 'Toggle Git word diff' })
 
       -- Text object
       map({ 'o', 'x' }, 'ih', gitsigns.select_hunk)
@@ -85,13 +85,19 @@ do
   require('which-key').setup {
     -- Delay between pressing a key and opening which-key (milliseconds)
     delay = 0,
-    icons = { mappings = vim.g.have_nerd_font },
+    filter = function(mapping) return require('config.context').visible(mapping) end,
+    icons = { mappings = vim.g.have_nerd_font, group = '' },
     win = { border = 'rounded' },
     -- Document existing key chains
     spec = {
-      { '<leader>s', group = 'Search', mode = { 'n', 'x' } },
-      { '<leader>t', group = '[T]oggle', mode = { 'n', 'x' } },
-      { '<leader>g', group = 'Git', mode = { 'n', 'x' } },
+      -- Missing leaf icons inherit their group icon; existing icons take priority.
+      { '<leader>', icon = { icon = '󰘳', color = 'grey' }, mode = { 'n', 'x' } },
+      { '<leader>f', desc = 'Files', icon = { icon = '󰈔', color = 'blue' } },
+      { '<leader>s', group = 'Search', icon = { icon = '', color = 'green' }, mode = { 'n', 'x' } },
+      { '<leader>t', group = 'Toggle', icon = { icon = '', color = 'yellow' }, mode = { 'n', 'x' } },
+      { '<leader>g', group = 'Git', icon = { icon = '', color = 'orange' }, mode = { 'n', 'x' } },
+      { '<leader>l', icon = { icon = '󰌵', color = 'yellow' }, mode = { 'n', 'x' } },
+      { '<leader>o', icon = { icon = '󰏌', color = 'blue' }, mode = { 'n', 'x' } },
       { 'g', group = 'Go to' },
       { 'gr', group = 'LSP navigation' },
     },
@@ -235,6 +241,7 @@ do
         local search = package.loaded['config.search']
         local search_title = search and search.status()
         if search_title then mode, mode_hl = 'Search', 'MiniStatuslineModeNormal' end
+        if vim.bo.filetype == 'fyler_finder' then mode, mode_hl = 'Files', 'MiniStatuslineModeNormal' end
         local mode_block = { hl = mode_hl, strings = { mode } }
         if vim.g.have_nerd_font then
           local colors = vim.api.nvim_get_hl(0, { name = mode_hl, link = false })
@@ -320,6 +327,11 @@ do
   local section_filename = statusline.section_filename
   ---@diagnostic disable-next-line: duplicate-set-field
   statusline.section_filename = function(args)
+    if vim.bo.filetype == 'fyler_finder' then
+      -- Keep Fyler's internal URI intact; only simplify its displayed name.
+      local path = vim.api.nvim_buf_get_name(0):gsub('^fyler[^:]*://', '')
+      return clip(path, vim.fn.strdisplaywidth(path) - (args.trim_width or 0), true):gsub('%%', '%%%%')
+    end
     local icon = ''
     if vim.g.have_nerd_font and vim.bo.filetype ~= '' and vim.bo.buftype == '' then
       icon = ' ' .. MiniIcons.get('filetype', vim.bo.filetype)
@@ -407,12 +419,12 @@ do
     integrations = { icon = vim.g.have_nerd_font and 'mini_icons' or nil },
     mappings = {
       n = {
-        ['<leader>f'] = { action = 'close', desc = 'Close file explorer' },
+        ['<leader>f'] = { action = 'close', desc = 'Files' },
       },
     },
   }
 
-  vim.keymap.set('n', '<leader>f', function() fyler.toggle() end, { desc = 'Toggle file explorer' })
+  vim.keymap.set('n', '<leader>f', function() fyler.toggle() end, { desc = 'Files' })
 
   -- [[ Indent guides ]]
   -- Add indentation guides even on blank lines

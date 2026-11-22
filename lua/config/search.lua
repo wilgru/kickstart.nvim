@@ -22,13 +22,13 @@ end
 
 local function style(win, list)
   api.nvim_win_call(win, function() vim.opt_local.fillchars:append { eob = ' ' } end)
-  api.nvim_set_hl(0, 'NativeSearchCursorLine', { bg = 'NONE' })
+  api.nvim_set_hl(0, 'NativeSearchCursorLine', { link = 'Visual' })
   api.nvim_set_hl(0, 'NativeSearchWinBar', { bg = 'NONE' })
   vim.wo[win].winhighlight = 'WinBar:NativeSearchWinBar,WinBarNC:NativeSearchWinBar'
     .. (list and ',CursorLine:NativeSearchCursorLine' or '')
   for key, value in pairs {
     number = false, relativenumber = false, signcolumn = 'no', foldcolumn = '0',
-    wrap = false, list = false, spell = false, cursorline = list,
+    wrap = false, list = false, spell = false, cursorline = list, cursorlineopt = 'line',
     colorcolumn = '', winbar = '', statuscolumn = '', winfixwidth = list,
   } do
     vim.wo[win][key] = value
@@ -97,13 +97,44 @@ function M.preview()
   end, 40)
 end
 
+local function truncate_start(text, width)
+  if vim.fn.strdisplaywidth(text) <= width then return text end
+  local start, count = 0, vim.fn.strchars(text)
+  while start < count and vim.fn.strdisplaywidth('…' .. vim.fn.strcharpart(text, start)) > width do
+    start = start + 1
+  end
+  return '…' .. vim.fn.strcharpart(text, start)
+end
+
+local function render_list(s)
+  local width = api.nvim_win_get_width(s.list_win)
+  local lines, icons = {}, {}
+  for row, entry in ipairs(s.filtered) do
+    local text = entry.text:gsub('[\r\n\t]', ' ')
+    local prefix = ''
+    if vim.g.have_nerd_font and _G.MiniIcons and (entry.path or entry.buf) then
+      local path = entry.path or api.nvim_buf_get_name(entry.buf)
+      local category, name = 'file', path
+      if path == '' then category, name = 'filetype', vim.bo[entry.buf].filetype end
+      local icon, hl = MiniIcons.get(category, name)
+      icons[row] = { icon = icon, hl = hl }
+      prefix = icon .. ' '
+    end
+    lines[row] = prefix .. truncate_start(text, width - vim.fn.strdisplaywidth(prefix))
+  end
+  write(s.list_buf, #lines > 0 and lines or vim.split(s.message or 'No matches', '\n', { plain = true, trimempty = true }))
+  api.nvim_buf_clear_namespace(s.list_buf, ns, 0, -1)
+  for row, icon in pairs(icons) do
+    api.nvim_buf_set_extmark(s.list_buf, ns, row - 1, 0, { end_col = #icon.icon, hl_group = icon.hl })
+  end
+  api.nvim_win_call(s.list_win, function() vim.fn.winrestview { leftcol = 0 } end)
+end
+
 local function render(s, entries, message)
   if not valid(s) then return end
   s.filtered = entries
   s.message = message
-  local lines = {}
-  for _, entry in ipairs(entries) do lines[#lines + 1] = entry.text:gsub('[\r\n\t]', ' ') end
-  write(s.list_buf, #lines > 0 and lines or vim.split(message or 'No matches', '\n', { plain = true, trimempty = true }))
+  render_list(s)
   api.nvim_win_set_cursor(s.list_win, { 1, 0 })
   M.preview()
   vim.cmd 'redrawstatus'
@@ -241,6 +272,15 @@ function M.open(opts)
   -- One shared statusline and no tab header: only the two panels and divider.
   vim.o.laststatus, vim.o.showtabline = 3, 0
   s.group = api.nvim_create_augroup('NativeSearchSession', { clear = true })
+  api.nvim_create_autocmd('WinResized', {
+    group = s.group,
+    callback = function()
+      if not valid(s) then return end
+      local cursor = api.nvim_win_get_cursor(s.list_win)
+      render_list(s)
+      api.nvim_win_set_cursor(s.list_win, { cursor[1], 0 })
+    end,
+  })
   api.nvim_create_autocmd('TabEnter', {
     group = s.group,
     callback = function()

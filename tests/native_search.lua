@@ -63,6 +63,13 @@ local ok, err = xpcall(function()
   assert(require('mini.statusline').config.content.active():find(' Search ', 1, true), 'Search mode pill missing')
   picker.update('unstaged.lua')
   assert(#picker.current.filtered == 1)
+  local s = picker.current
+  assert(vim.wo[s.list_win].cursorline and vim.wo[s.list_win].cursorlineopt == 'line', 'Selection must highlight the full row')
+  assert(api.nvim_get_hl(0, { name = 'NativeSearchCursorLine' }).link == 'Visual', 'Selection background missing')
+  local icon, icon_hl = MiniIcons.get('file', s.filtered[1].path)
+  assert(api.nvim_buf_get_lines(s.list_buf, 0, 1, false)[1] == icon .. ' ' .. s.filtered[1].text, 'File icon missing')
+  local marks = api.nvim_buf_get_extmarks(s.list_buf, api.nvim_create_namespace 'NativeSearch', 0, -1, { details = true })
+  assert(#marks == 1 and marks[1][4].hl_group == icon_hl and marks[1][4].end_col == #icon, 'File icon highlight missing')
   wait_for(function() return api.nvim_buf_get_lines(picker.current.preview_buf, 0, 1, false)[1] == 'local needle = "hello"' end)
   picker.accept()
   assert(vim.fn.expand '%:t' == 'unstaged.lua', 'Wrong file opened')
@@ -130,6 +137,25 @@ local ok, err = xpcall(function()
     assert(picker.current)
     close()
   end
+  local long_path = root .. '/' .. string.rep('long-directory/', 12) .. '文件.lua'
+  picker.open { items = { { text = 'short' }, { text = long_path, path = long_path } } }
+  picker.move(1)
+  local list = picker.current
+  local file_icon = MiniIcons.get('file', long_path)
+  local function check_truncated()
+    local line = api.nvim_buf_get_lines(list.list_buf, 1, 2, false)[1]
+    assert(line:sub(1, #file_icon + 4) == file_icon .. ' …', 'Long item must keep its icon and truncate its start')
+    assert(line:sub(-#'文件.lua') == '文件.lua', 'Truncation lost the filename')
+    assert(vim.fn.strdisplaywidth(line) <= api.nvim_win_get_width(list.list_win), 'Item exceeds list width')
+    assert(list.filtered[2].text == long_path, 'Truncation changed search text')
+  end
+  check_truncated()
+  api.nvim_win_set_width(list.list_win, 25)
+  api.nvim_exec_autocmds('WinResized', {})
+  check_truncated()
+  assert(api.nvim_win_get_cursor(list.list_win)[1] == 2, 'Resize lost selection')
+  close()
+
   picker.open { title = 'Previous search', query = 'hello', items = { { text = 'hello' } } }
   close()
   sources.builtin()

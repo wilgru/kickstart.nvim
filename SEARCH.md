@@ -15,10 +15,23 @@ menus. Your leader is Space.
 | `Space t` | Toggles |
 | `Space i` | Inspect |
 | `Space f` | Toggle Fyler (also closes it from inside the explorer) |
-| `Space o` | Open file / URL externally |
+| `Space o` | Open the link under the cursor externally |
 
 The experimental bare-`s` search popup, Space-a actions, and Space-g navigation
 remappings have been removed. Native `g` commands are no longer disabled.
+
+The leader popup is context-aware. Unsupported language tools, unavailable
+formatters, Git commands outside Git-attached buffers, editing operations in
+read-only/special buffers, and empty diagnostics/history options are hidden.
+Code lens is shown only on a line with a lens; hunk actions require local changes.
+Empty submenu headings disappear too. File browsing and project file search
+remain available everywhere.
+
+**Space o** appears only over a URL, an inline Markdown link, or an extmark-based
+rendered hyperlink. Plain filesystem paths and arbitrary words don't qualify.
+Relative Markdown links resolve beside the source document. Link checks don't
+make synchronous language-server requests, and the shortcut won't open anything
+if invoked away from a link. Native `gx` retains its original behavior.
 
 ## Code operations: Space c
 
@@ -122,12 +135,15 @@ Native `gc`, `gcc`, and `g~` remain available.
 
 `lua/config/search.lua` owns the search UI; `lua/config/search_sources.lua`
 contains providers. `lua/plugins/search.lua` registers search and LSP shortcuts.
-`lua/config/actions.lua` registers the code/inspection menus.
+`lua/config/actions.lua` registers the code/inspection menus;
+`lua/config/context.lua` filters popup entries and detects links.
 
 ```sh
 sh tests/run.sh
 # Or run one suite:
 sh tests/run.sh tests/action_keymaps.lua
+# Context-aware visibility and link detection:
+sh tests/run.sh tests/context_menu.lua
 ```
 
 Each suite runs in an isolated Neovim process without swap or ShaDa writes.

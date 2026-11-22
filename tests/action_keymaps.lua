@@ -35,4 +35,20 @@ for _, suffix in ipairs { 's', 'r', 'S', 'R', 'p', 'i', 'b', 'd', 'D', 'q', 'Q' 
   assert(next(mapping('<leader>h' .. suffix)) == nil, 'Old Git binding remains')
 end
 assert(mapping('<leader>gs', 'x').buffer == 1 and mapping('<leader>gr', 'x').buffer == 1)
+api.nvim_exec_autocmds('VimEnter', {})
+vim.wait(100)
+local view = require 'which-key.view'
+local checked = 0
+for _, mode in ipairs { 'n', 'x' } do
+  local tree = require('which-key.buf').get({ mode = mode, update = true }).tree
+  tree:walk(function(node)
+    if node.path[1] == '<Space>' and (node.keymap or (node.mapping and node.mapping.group)) then
+      assert(view.icon(node), 'Leader entry has no icon: ' .. node.keys)
+      checked = checked + 1
+    end
+  end)
+  local toggle = tree:find('<leader>t')
+  assert(toggle.mapping.desc == 'Toggle', 'Toggle group still has a mnemonic prefix')
+end
+assert(checked > 20, 'Leader icon check did not inspect the submenu entries')
 print('Action/Git keymaps: all tests passed')

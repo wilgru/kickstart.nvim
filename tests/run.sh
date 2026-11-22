@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 if [ "$#" -eq 0 ]; then
   set -- tests/native_search.lua tests/native_search_input.lua \
-    tests/native_search_keymaps.lua tests/navigation_keymaps.lua tests/action_keymaps.lua
+    tests/native_search_keymaps.lua tests/navigation_keymaps.lua tests/action_keymaps.lua tests/context_menu.lua
 fi
 
 for test_file do

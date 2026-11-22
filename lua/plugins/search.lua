@@ -12,6 +12,17 @@ map('k', search.keymaps, 'Keymaps')
 map('.', search.oldfiles, 'Recent files')
 map('c', search.commands, 'Commands')
 
+require('which-key').add {
+  { '<leader>sf', icon = { icon = '󰈔', color = 'blue' } },
+  { '<leader>sm', icon = { icon = '', color = 'orange' } },
+  { '<leader>su', icon = { icon = '', color = 'orange' } },
+  { '<leader>sg', icon = { icon = '', color = 'green' } },
+  { '<leader>sw', icon = { icon = '󰦨', color = 'green' }, mode = { 'n', 'x' } },
+  { '<leader>sk', icon = { icon = '', color = 'purple' } },
+  { '<leader>s.', icon = { icon = '󰋚', color = 'cyan' } },
+  { '<leader>sc', icon = { icon = '', color = 'yellow' } },
+}
+
 vim.api.nvim_create_autocmd('LspAttach', {
   group = vim.api.nvim_create_augroup('native-search-lsp-attach', { clear = true }),
   callback = function(event)
