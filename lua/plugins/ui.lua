@@ -99,7 +99,7 @@ do
       { '<leader>g', group = 'Git', icon = { icon = '', color = 'orange' }, mode = { 'n', 'x' } },
       { '<leader>l', icon = { icon = '󰌵', color = 'yellow' }, mode = { 'n', 'x' } },
       { '<leader>o', icon = { icon = '󰏌', color = 'blue' }, mode = { 'n', 'x' } },
-      { 'g', group = 'Go to' },
+      { 'g', group = 'g' },
       { 'gr', group = 'LSP navigation' },
     },
   }

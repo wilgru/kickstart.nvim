@@ -7,7 +7,7 @@ M.moves = {
 
 function M.setup()
   require('which-key').add {
-    { '<leader>c', group = 'Code', icon = { icon = '', color = 'orange' }, mode = { 'n', 'x' } },
+    { '<leader>c', group = 'Code actions', icon = { icon = '', color = 'orange' }, mode = { 'n', 'x' } },
     { '<leader>i', group = 'Inspect', icon = { icon = '', color = 'purple' } },
     { '<leader>i8', icon = { icon = '', color = 'purple' } },
     { '<leader>is', icon = { icon = '󰅪', color = 'purple' } },

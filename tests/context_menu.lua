@@ -94,6 +94,7 @@ local ok, err = xpcall(function()
     local mode = require('which-key.buf').get { mode = 'n', update = true }
     return mode.tree:find('<leader>' .. key)
   end
+  assert(entry('c').mapping.desc == 'Code actions', 'Code actions group label is incorrect')
   assert(entry('i').mapping.icon.icon == vim.fn.nr2char(0xedfa), 'Inspect does not use nf-fa-glasses')
   assert(not entry('d'), 'Diagnostics appeared without buffer diagnostics')
   vim.diagnostic.set(diagnostics, buf, { { lnum = 0, col = 0, message = 'test' } })
@@ -108,7 +109,7 @@ local ok, err = xpcall(function()
   assert(next(vim.fn.maparg('<leader>o', 'n', false, true)), 'Filtering deleted the actual shortcut')
   methods = {}
   formatters = {}
-  assert(not entry('l') and not entry('c'), 'Unsupported language tools or empty Code group remained visible')
+  assert(not entry('l') and not entry('c'), 'Unsupported language tools or empty Code actions group remained visible')
   assert(not entry('g'), 'Git page remained visible outside an attached Git buffer')
   vim.bo.buftype = 'nofile'
   assert(not entry('t') and not entry('i'), 'Editing-only groups remained in a scratch buffer')

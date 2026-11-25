@@ -40,7 +40,7 @@ Relative Markdown links resolve beside the source document. Link checks don't
 make synchronous language-server requests, and the shortcut won't open anything
 if invoked away from a link. Native `gx` retains its original behavior.
 
-## Code operations: Space c
+## Code actions: Space c
 
 These perform operations on existing code, unlike native `c`, which replaces
 text and enters Insert mode.
@@ -59,7 +59,7 @@ Direct editing stays on native `gu`, `gU`, `gq`, `gw`, and `gJ`, rather than
 duplicated leader aliases. Surroundings use `ys` (add), `ds`
 (delete), and `cs` (change); for example, `ysiw)` surrounds a word.
 
-## Go to: g
+## Bare `g` commands
 
 Native movement such as `gg`, `gf`, `gt`, `gi`, and `g;` works normally.
 In LSP-enabled buffers:
