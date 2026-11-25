@@ -32,7 +32,8 @@ vim.fn.maparg('<leader>f', 'n', false, true).callback()
 assert(vim.wait(3000, function() return vim.bo.filetype == 'fyler_finder' end), 'Fyler did not open')
 local statusline = require 'mini.statusline'
 local display = vim.api.nvim_eval_statusline(statusline.config.content.active(), {}).str
-assert(display:find('Files', 1, true), 'Fyler mode label is not Files')
+local mode = statusline.section_mode { trunc_width = 120 }
+assert(display:find(mode, 1, true), 'Fyler does not show the standard Normal mode label')
 assert(not display:find('fyler', 1, true), 'Fyler URI leaked into the statusline')
 assert(vim.api.nvim_buf_get_name(0):match('^fyler[^:]*://'), 'Fyler internal buffer URI was changed')
 local close = vim.fn.maparg('<leader>f', 'n', false, true)

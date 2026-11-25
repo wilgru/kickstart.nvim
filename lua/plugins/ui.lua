@@ -141,7 +141,7 @@ do
         MiniStatuslineDevinfo = { fg = 'fg1', bg = 'NONE' },
         MiniStatuslineBranch = { fg = palette.green.bright, bg = 'NONE' },
         MiniStatuslineGitAdded = { fg = palette.green.bright, bg = 'NONE' },
-        MiniStatuslineGitChanged = { fg = palette.blue.base, bg = 'NONE' },
+        MiniStatuslineGitChanged = { fg = palette.yellow.base, bg = 'NONE' },
         MiniStatuslineGitRemoved = { fg = palette.red.base, bg = 'NONE' },
         MiniStatuslineModified = { fg = palette.yellow.base, bg = 'NONE' },
         MiniStatuslineFileinfo = { fg = palette.gray.base, bg = 'NONE' },
@@ -241,7 +241,6 @@ do
         local search = package.loaded['config.search']
         local search_title = search and search.status()
         if search_title then mode, mode_hl = 'Search', 'MiniStatuslineModeNormal' end
-        if vim.bo.filetype == 'fyler_finder' then mode, mode_hl = 'Files', 'MiniStatuslineModeNormal' end
         local mode_block = { hl = mode_hl, strings = { mode } }
         if vim.g.have_nerd_font then
           local colors = vim.api.nvim_get_hl(0, { name = mode_hl, link = false })
@@ -268,7 +267,6 @@ do
             strings = {
               statusline.section_git { trunc_width = 40 },
               statusline.section_diff { trunc_width = 75 },
-              statusline.section_diagnostics { trunc_width = 75 },
             },
           },
           '%<',
@@ -279,6 +277,7 @@ do
             hl = 'MiniStatuslineFileinfo',
             strings = {
               statusline.section_lsp { trunc_width = 75 },
+              statusline.section_diagnostics { trunc_width = 75 },
               statusline.section_fileinfo { trunc_width = 120 },
               statusline.section_location { trunc_width = 75 },
               statusline.section_searchcount { trunc_width = 75 },
@@ -334,14 +333,14 @@ do
     end
     local icon = ''
     if vim.g.have_nerd_font and vim.bo.filetype ~= '' and vim.bo.buftype == '' then
-      icon = ' ' .. MiniIcons.get('filetype', vim.bo.filetype)
+      icon = MiniIcons.get('filetype', vim.bo.filetype) .. ' '
     end
     local modified = vim.bo.modified and '  %#MiniStatuslineModified#%#MiniStatuslineFilename#' or ''
-    local filename = section_filename(args):gsub('%%m', function() return icon .. modified end)
+    local filename = section_filename(args):gsub('%%m', function() return modified end)
     return (filename:gsub('%%[fFt]', function(item)
       local path = vim.api.nvim_eval_statusline(item, {}).str
       local max_width = vim.fn.strdisplaywidth(path) - (args.trim_width or 0)
-      return clip(path, max_width, true):gsub('%%', '%%%%')
+      return icon .. clip(path, max_width, true):gsub('%%', '%%%%')
     end))
   end
 
@@ -368,7 +367,7 @@ do
   statusline.section_fileinfo = function(args)
     local info = section_fileinfo(args)
     if statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return '' end
-    -- Keep only encoding, format, and size; the filetype icon lives after the path.
+    -- Keep only encoding, format, and size; the filetype icon precedes the path.
     info = info:match('(%S*%[[^%]]+%] %S+)$') or ''
     if not vim.g.have_nerd_font then return info end
     -- Decorate the default encoding[format] size suffix.
@@ -387,7 +386,8 @@ do
     if statusline.is_truncated(args.trunc_width) then return '' end
     local count = #vim.lsp.get_clients { bufnr = 0 }
     if count == 0 then return '' end
-    return count .. (count == 1 and ' LSP' or ' LSPs')
+    local icon = vim.g.have_nerd_font and '󰰎 ' or ''
+    return icon .. count .. (count == 1 and ' LSP' or ' LSPs')
   end
 
   local section_searchcount = statusline.section_searchcount
