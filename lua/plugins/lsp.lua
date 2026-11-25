@@ -52,9 +52,8 @@ do
       --
       -- In this case, we create a function that lets us more easily define mappings specific
       -- for LSP related items. It sets the mode, buffer and description for us each time.
-      local map = function(keys, func, desc, mode)
-        mode = mode or 'n'
-        vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+      local map = function(keys, func, desc)
+        vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
       end
 
       -- Rename the variable under your cursor.
@@ -63,7 +62,7 @@ do
 
       -- Execute a code action, usually your cursor needs to be on top of an error
       -- or a suggestion from your LSP for this to activate.
-      map('<leader>l', vim.lsp.buf.code_action, 'Language suggestions', { 'n', 'x' })
+      vim.keymap.set({ 'n', 'x' }, '<leader>l', vim.lsp.buf.code_action, { buffer = event.buf, desc = 'Language suggestions' })
 
       -- WARN: This is not Goto Definition, this is Goto Declaration.
       --  For example, in C this would take you to the header.

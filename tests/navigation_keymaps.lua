@@ -7,7 +7,7 @@ for _, key in ipairs { 'gg', 'ge', 'gf', 'gt', 'gi', 'g~', 'gu', 'gU', 'gq', 'gw
 end
 for _, key in ipairs { 'g[', 'g]', 'gsf', 'gsF', 'gc', 'gcc' } do assert(next(mapping(key)), key) end
 api.nvim_exec_autocmds('LspAttach', { buffer = 0, data = { client_id = -1 } })
-for _, key in ipairs { 'gd', 'gD', 'grr', 'gri', 'grt', 'gO', 'gW' } do
+for _, key in ipairs { 'grd', 'gD', 'grr', 'gri', 'grt', 'gO', 'gW' } do
   assert(mapping(key).buffer == 1, 'Missing LSP navigation: ' .. key)
 end
 for _, key in ipairs { '<leader>gv', '<leader>gvg', '<leader>g[', '<leader>g]', '<leader>gsf', '<leader>gsF' } do

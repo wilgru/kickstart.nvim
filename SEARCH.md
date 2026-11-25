@@ -1,4 +1,4 @@
-# Editor keys and native search
+# Editor keys and Telescope
 
 Keep native Vim editing on letter keys; use **Space** for project tools and
 menus. Your leader is Space.
@@ -10,10 +10,12 @@ menus. Your leader is Space.
 | `s` | Native substitute: delete a character and enter Insert mode |
 | `Space c` | Code-changing operations |
 | `Space l` | Language suggestions: fixes and refactorings from the LSP |
-| `Space s` | Search |
+| `Space s` | Telescope search |
+| `Space /` | Forward search (fuzzy search in the current buffer) |
 | `Space g` | Git |
 | `Space t` | Toggles |
 | `Space i` | Inspect |
+| `Space d` | Diagnostics for the current buffer |
 | `Space f` | Toggle Fyler (also closes it from inside the explorer) |
 | `Space o` | Open the link under the cursor externally |
 
@@ -59,7 +61,7 @@ In LSP-enabled buffers:
 
 | Keys | Destination |
 | --- | --- |
-| `gd` | Definition |
+| `grd` | Definition |
 | `gD` | Declaration |
 | `grr` | References |
 | `gri` | Implementation |
@@ -67,45 +69,26 @@ In LSP-enabled buffers:
 | `gO` | Document symbols |
 | `gW` | Workspace symbols |
 
-These use the native search interface where appropriate. Workspace symbols are
-fetched once and filtered locally. `g[` / `g]` move to text-object boundaries;
+These use Telescope pickers where appropriate. `g[` / `g]` move to text-object boundaries;
 `gsf` / `gsF` navigate surroundings, with the usual `l`/`n` suffixes.
 
-## Search: Space s
+## Telescope search: Space s
 
 | Key | Search |
 | --- | --- |
 | `f` | Project files |
-| `m` | All Git changes: staged, unstaged, deleted, and untracked |
-| `u` | Unstaged tracked files only |
+| `m` | Modified files (Git status) |
+| `u` | Unstaged tracked files |
 | `g` | Live grep |
+| `o` | Open buffers |
 | `w` | Current word / Visual selection |
 | `c` | Commands |
 | `k` | Keymaps |
-| `.` | Recent files |
+| `r` | Recent files |
 
-Search opens a temporary tab with a file list and a syntax-highlighted,
-read-only preview. It uses your editor theme, a transparent background, no `~`
-markers, and the native bottom input line with no prompt label. The shared
-statusline shows **Search** and the search type, not a filename.
-
-- Type to filter live. Enter finishes input and returns to the results.
-- `j`/`k` select a result; Enter opens it in the original window.
-- `i` edits the query again. Ctrl-N/P select results while typing.
-- Esc while typing returns to results without discarding the query.
-- `q`/Esc in results closes search and restores the original layout.
-- Tab switches between results and preview for scrolling.
-
-File lists use Neovim fuzzy matching, include hidden files, and respect ignore
-files. Grep uses ripgrep regex and smart case; word/selection search is literal.
-Lists show at most 1,000 results. Grep is debounced, obsolete processes are
-cancelled, and subprocess output is bounded at 8 MiB. Binary files and files
-larger than 1 MiB aren't previewed. Loaded files preview their unsaved contents.
-Preview buffers aren't listed or attached to language servers.
-
-Requires `fd`, `rg`, and Git. No search plugin is required. fzf was uninstalled;
-Telescope remains disabled in `lua/plugins/telescope.lua`. Native `vim.ui.select`
-is used for code-action prompts.
+In a picker, `Ctrl-/` (Insert mode) or `?` (Normal mode) shows available keys.
+Grep pickers require `rg`. Telescope also provides `vim.ui.select` prompts,
+including code actions, when its `ui-select` extension is available.
 
 ## Git: Space g
 
@@ -133,8 +116,7 @@ Native `gc`, `gcc`, and `g~` remain available.
 
 ## Implementation and tests
 
-`lua/config/search.lua` owns the search UI; `lua/config/search_sources.lua`
-contains providers. `lua/plugins/search.lua` registers search and LSP shortcuts.
+`lua/plugins/telescope.lua` sets up Telescope and registers search and LSP picker shortcuts.
 `lua/config/actions.lua` registers the code/inspection menus;
 `lua/config/context.lua` filters popup entries and detects links.
 

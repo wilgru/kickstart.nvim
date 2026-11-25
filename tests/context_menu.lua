@@ -24,7 +24,7 @@ end
 local ok, err = xpcall(function()
   line('plain text')
   assert(not visible('l') and not visible('cr') and not visible('cl') and not visible('cf'))
-  assert(not visible('q') and not visible('o') and not visible('g'))
+  assert(not visible('d') and not visible('o') and not visible('g'))
   assert(visible('sf') and visible('f') and visible('tc') and visible('ia') and visible('sw'))
   methods['textDocument/codeAction'], methods['textDocument/rename'] = true, true
   methods['textDocument/formatting'] = true
@@ -57,9 +57,9 @@ local ok, err = xpcall(function()
   vim.bo.buftype = ''
   vim.b.gitsigns_status_dict = nil
   vim.diagnostic.set(diagnostics, buf, { { lnum = 0, col = 0, message = 'test' } })
-  assert(visible('q'))
+  assert(visible('d'))
   vim.diagnostic.reset(diagnostics, buf)
-  assert(not visible('q'))
+  assert(not visible('d'))
 
   line('word https://example.com/path.', 0)
   assert(not context.link() and not visible('o'))
@@ -94,6 +94,13 @@ local ok, err = xpcall(function()
     local mode = require('which-key.buf').get { mode = 'n', update = true }
     return mode.tree:find('<leader>' .. key)
   end
+  assert(entry('i').mapping.icon.icon == vim.fn.nr2char(0xedfa), 'Inspect does not use nf-fa-glasses')
+  assert(not entry('d'), 'Diagnostics appeared without buffer diagnostics')
+  vim.diagnostic.set(diagnostics, buf, { { lnum = 0, col = 0, message = 'test' } })
+  assert(entry('d').keymap.desc == 'Diagnostics', 'Diagnostics palette label is incorrect')
+  assert(vim.fn.maparg('<leader>d', 'n', false, true).callback == vim.diagnostic.setloclist)
+  assert(not next(vim.fn.maparg('<leader>q', 'n', false, true)), 'Old diagnostics shortcut remains')
+  vim.diagnostic.reset(diagnostics, buf)
   line('word https://example.com', 8)
   assert(entry('o'))
   api.nvim_win_set_cursor(0, { 1, 0 })

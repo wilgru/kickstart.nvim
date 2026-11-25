@@ -13,7 +13,10 @@ for _, key in ipairs { '<leader>aa', '<leader>ar', '<leader>al', '<leader>af', '
   assert(next(mapping(key)) == nil, 'Old action mapping remains: ' .. key)
 end
 api.nvim_exec_autocmds('LspAttach', { buffer = 0, data = { client_id = -1 } })
-assert(mapping('<leader>l').buffer == 1 and mapping('<leader>l', 'x').buffer == 1)
+for _, mode in ipairs { 'n', 'x' } do
+  local suggestions = mapping('<leader>l', mode)
+  assert(suggestions.buffer == 1 and suggestions.desc == 'Language suggestions')
+end
 for _, key in ipairs { '<leader>ca', '<leader>cd', '<leader>cu', '<leader>cdd', '<leader>cuu', '<leader>cq', '<leader>cw', '<leader>cj' } do
   assert(next(mapping(key)) == nil, 'Redundant code mapping remains: ' .. key)
 end

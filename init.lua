@@ -151,7 +151,7 @@ require('config.keymaps')
 
 require('plugins.ui')
 require('config.actions').setup()
-require('plugins.search')
+require('plugins.telescope')
 require('plugins.lsp')
 require('plugins.formatting')
 require('plugins.autocomplete')

@@ -238,21 +238,11 @@ do
     content = {
       active = function()
         local mode, mode_hl = statusline.section_mode { trunc_width = 120 }
-        local search = package.loaded['config.search']
-        local search_title = search and search.status()
-        if search_title then mode, mode_hl = 'Search', 'MiniStatuslineModeNormal' end
         local mode_block = { hl = mode_hl, strings = { mode } }
         if vim.g.have_nerd_font then
           local colors = vim.api.nvim_get_hl(0, { name = mode_hl, link = false })
           vim.api.nvim_set_hl(0, 'MiniStatuslineModeCap', { fg = colors.bg, bg = 'NONE' })
           mode_block = '%#MiniStatuslineModeCap#%#' .. mode_hl .. '# ' .. mode .. ' %#MiniStatuslineModeCap#'
-        end
-        if search_title then
-          return statusline.combine_groups {
-            mode_block,
-            { hl = 'MiniStatuslineDevinfo', strings = { search_title } },
-            '%=',
-          }
         end
         local command = vim.api.nvim_eval_statusline('%S', {}).str
         local command_block = ''

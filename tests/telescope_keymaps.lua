@@ -1,13 +1,23 @@
--- Run: sh tests/run.sh tests/native_search_keymaps.lua
+-- Run: sh tests/run.sh tests/telescope_keymaps.lua
 local function mapped(key, mode) return next(vim.fn.maparg(key, mode or 'n', false, true)) ~= nil end
-for _, key in ipairs { '<leader>sf', '<leader>sm', '<leader>su', '<leader>sg', '<leader>sw', '<leader>sk', '<leader>s.', '<leader>sc' } do
-  assert(mapped(key), 'Missing search shortcut: ' .. key)
+local builtin = require 'telescope.builtin'
+for suffix, picker in pairs {
+  sf = 'find_files', sm = 'git_status', sg = 'live_grep', sw = 'grep_string',
+  sk = 'keymaps', sr = 'oldfiles', sc = 'commands', so = 'buffers',
+} do
+  local key = '<leader>' .. suffix
+  assert(vim.fn.maparg(key, 'n', false, true).callback == builtin[picker], 'Missing Telescope shortcut: ' .. key)
 end
 assert(mapped('<leader>sw', 'x'), 'Visual selection search must be available on Space sw')
-for _, key in ipairs { '<leader>sh', '<leader>ss', '<leader>sd', '<leader>sr', '<leader>sb', '<leader>sl', '<leader>s/', '<leader>sn' } do
-  assert(not mapped(key), 'Removed search shortcut remains: ' .. key)
+assert(vim.fn.maparg('<leader>so', 'n', false, true).desc == 'Open buffers')
+assert(vim.fn.maparg('<leader>/', 'n', false, true).desc == 'Forward search')
+for _, key in ipairs { '<leader>/', '<leader>su' } do
+  assert(mapped(key), 'Missing Telescope shortcut: ' .. key)
 end
-for _, key in ipairs { 's', 'sf', 'sm', 'su', 'sg', 'sw', 'sk', 's.', 'sc', '<leader>a', '<leader>aa', '<leader>af' } do
+for _, suffix in ipairs { 'b', 'h', 's', 'd', '.', '/', 'n', 'l' } do
+  assert(not mapped('<leader>s' .. suffix), 'Extra search shortcut remains: ' .. suffix)
+end
+for _, key in ipairs { '<leader><leader>', 's', 'sf', 'sm', 'su', 'sg', 'sw', 'sk', 's.', 'sc', '<leader>a', '<leader>aa', '<leader>af' } do
   assert(not mapped(key), 'Old search shortcut remains: ' .. key)
 end
 assert(not mapped('s', 'x') and not mapped('sw', 'x'))
@@ -48,8 +58,26 @@ local config = require 'which-key.config'
 assert(config.options.icons.group == '', 'Leader groups still have + prefixes')
 assert(vim.fn.maparg('<leader>f', 'n', false, true).desc == 'Files', 'Fyler shortcut is not labeled Files')
 local files_icon
+local icons = {}
 for _, mapping in ipairs(config.mappings) do
   if mapping.lhs == '<leader>f' and mapping.desc == 'Files' then files_icon = mapping.icon end
+  if mapping.icon then icons[mapping.lhs] = mapping.icon.icon end
 end
 assert(files_icon and files_icon.icon ~= '', 'Files shortcut has no icon')
-print('Native search: keymap tests passed')
+assert(icons['<leader>/'] == '', 'Forward search has the wrong icon')
+for suffix, icon in pairs { f = '󰈔', m = '', u = '', g = '', w = '󰦨', k = '', r = '󰋚', c = '', o = '' } do
+  assert(icons['<leader>s' .. suffix] == icon, 'Search shortcut has the wrong icon: ' .. suffix)
+end
+local origin = vim.api.nvim_get_current_win()
+vim.o.laststatus, vim.o.cmdheight, vim.o.ruler, vim.o.showcmd = 3, 1, true, true
+for _, key in ipairs { '<leader>sc', '<leader>sf', '<leader>/', '<leader>so' } do
+  vim.fn.maparg(key, 'n', false, true).callback()
+  assert(vim.wait(3000, function() return vim.bo.filetype == 'TelescopePrompt' end), 'Telescope did not open: ' .. key)
+  local prompt = vim.api.nvim_get_current_buf()
+  assert(vim.o.laststatus == 0 and vim.o.cmdheight == 0 and not vim.o.ruler and not vim.o.showcmd, 'Editor bottom UI is visible')
+  assert(not require('telescope.actions.state').get_current_picker(prompt).previewer, 'Telescope preview is enabled: ' .. key)
+  require('telescope.actions').close(prompt)
+  assert(vim.api.nvim_get_current_win() == origin, 'Telescope did not restore the original window')
+  assert(vim.o.laststatus == 3 and vim.o.cmdheight == 1 and vim.o.ruler and vim.o.showcmd, 'Editor bottom UI was not restored')
+end
+print('Telescope and Fyler: keymap tests passed')
