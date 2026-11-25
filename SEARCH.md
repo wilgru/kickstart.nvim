@@ -19,6 +19,11 @@ menus. Your leader is Space.
 | `Space f` | Toggle Fyler (also closes it from inside the explorer) |
 | `Space o` | Open the link under the cursor externally |
 
+In Fyler, the gutter marks changed files with Git status letters such as `M`
+(modified), `A` (added), `R` (renamed), and `?` (untracked). Folders show the
+highest-priority status among their descendants, even when collapsed.
+Telescope shows the same signs at the right edge of file results.
+
 The experimental bare-`s` search popup, Space-a actions, and Space-g navigation
 remappings have been removed. Native `g` commands are no longer disabled.
 
@@ -78,7 +83,6 @@ These use Telescope pickers where appropriate. `g[` / `g]` move to text-object b
 | --- | --- |
 | `f` | Project files |
 | `m` | Modified files (Git status) |
-| `u` | Unstaged tracked files |
 | `g` | Live grep |
 | `o` | Open buffers |
 | `w` | Current word / Visual selection |

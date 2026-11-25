@@ -411,6 +411,7 @@ do
   -- Browse and edit the file system as a tree in the current window
   vim.pack.add { gh 'FylerOrg/fyler.nvim' }
   local fyler = require 'fyler'
+  require 'config.fyler_git'
   fyler.setup {
     kind = 'replace',
     win_opts = {
@@ -418,6 +419,7 @@ do
       relativenumber = true,
     },
     integrations = { icon = vim.g.have_nerd_font and 'mini_icons' or nil },
+    extensions = { gutter_git = { enabled = true } },
     mappings = {
       n = {
         ['<leader>f'] = { action = 'close', desc = 'Files' },

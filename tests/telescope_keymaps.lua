@@ -11,10 +11,7 @@ end
 assert(mapped('<leader>sw', 'x'), 'Visual selection search must be available on Space sw')
 assert(vim.fn.maparg('<leader>so', 'n', false, true).desc == 'Open buffers')
 assert(vim.fn.maparg('<leader>/', 'n', false, true).desc == 'Forward search')
-for _, key in ipairs { '<leader>/', '<leader>su' } do
-  assert(mapped(key), 'Missing Telescope shortcut: ' .. key)
-end
-for _, suffix in ipairs { 'b', 'h', 's', 'd', '.', '/', 'n', 'l' } do
+for _, suffix in ipairs { 'b', 'h', 's', 'd', '.', '/', 'n', 'l', 'u' } do
   assert(not mapped('<leader>s' .. suffix), 'Extra search shortcut remains: ' .. suffix)
 end
 for _, key in ipairs { '<leader><leader>', 's', 'sf', 'sm', 'su', 'sg', 'sw', 'sk', 's.', 'sc', '<leader>a', '<leader>aa', '<leader>af' } do
@@ -65,7 +62,7 @@ for _, mapping in ipairs(config.mappings) do
 end
 assert(files_icon and files_icon.icon ~= '', 'Files shortcut has no icon')
 assert(icons['<leader>/'] == '', 'Forward search has the wrong icon')
-for suffix, icon in pairs { f = '󰈔', m = '', u = '', g = '', w = '󰦨', k = '', r = '󰋚', c = '', o = '' } do
+for suffix, icon in pairs { f = '󰈔', m = '', g = '', w = '󰦨', k = '', r = '󰋚', c = '', o = '' } do
   assert(icons['<leader>s' .. suffix] == icon, 'Search shortcut has the wrong icon: ' .. suffix)
 end
 local origin = vim.api.nvim_get_current_win()

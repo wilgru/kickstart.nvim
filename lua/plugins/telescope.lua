@@ -49,7 +49,7 @@ do
     if dir ~= '' and status and vim.api.nvim_win_is_valid(status.results_win) then
       local picker = status.picker
       local gutter = math.max(vim.fn.strdisplaywidth(picker.entry_prefix), vim.fn.strdisplaywidth(picker.selection_caret))
-      local width = vim.api.nvim_win_get_width(status.results_win) - gutter
+      local width = vim.api.nvim_win_get_width(status.results_win) - gutter - 3 -- padded Git sign
       local reserved = opts.__prefix or opts.path_display_reserve or (opts.disable_devicons and 0 or 2)
       dir = util.clip_directory(dir, width - reserved - vim.fn.strdisplaywidth(name) - 1)
     end
@@ -64,7 +64,11 @@ do
   require('telescope').setup {
     defaults = { preview = false, path_display = display_path },
     pickers = {
-      git_status = { path_display_reserve = 4 },
+      git_status = {
+        path_display_reserve = 4,
+        -- Use the shared Git signs on the right instead of Telescope's two columns.
+        git_icons = { added = '', changed = '', copied = '', deleted = '', renamed = '', unmerged = '', untracked = '' },
+      },
       -- Leave room for the match text and line/column after the path.
       live_grep = { path_display_reserve = 24 },
       grep_string = { path_display_reserve = 24 },
@@ -83,6 +87,7 @@ do
     group = chrome,
     pattern = 'TelescopePrompt',
     callback = function(event)
+      require('config.telescope_git').attach(event.buf)
       -- The picker has its own prompt; hide the editor's bottom UI until it closes.
       local saved = { laststatus = vim.o.laststatus, cmdheight = vim.o.cmdheight, ruler = vim.o.ruler, showcmd = vim.o.showcmd }
       vim.o.laststatus = 0
@@ -104,14 +109,6 @@ do
   local builtin = require 'telescope.builtin'
   vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = 'Files' })
   vim.keymap.set('n', '<leader>sm', builtin.git_status, { desc = 'Modified files' })
-  vim.keymap.set('n', '<leader>su', function()
-    builtin.git_files {
-      cwd = vim.fn.getcwd(),
-      git_command = { 'git', 'diff', '--name-only', '-z', '--' },
-      split_char = '\0',
-      prompt_title = 'Unstaged files',
-    }
-  end, { desc = 'Unstaged files' })
   vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = 'Grep' })
   vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = 'Current word' })
   vim.keymap.set('x', '<leader>sw', builtin.grep_string, { desc = 'Selected text' })
@@ -123,7 +120,6 @@ do
   require('which-key').add {
     { '<leader>sf', icon = { icon = '󰈔', color = 'blue' } },
     { '<leader>sm', icon = { icon = '', color = 'orange' } },
-    { '<leader>su', icon = { icon = '', color = 'orange' } },
     { '<leader>sg', icon = { icon = '', color = 'green' } },
     { '<leader>sw', icon = { icon = '󰦨', color = 'green' }, mode = { 'n', 'x' } },
     { '<leader>sk', icon = { icon = '', color = 'purple' } },

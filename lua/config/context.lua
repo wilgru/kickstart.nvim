@@ -118,7 +118,7 @@ function M.visible(mapping)
   if key:match('^tc') or key:match('^t~') then return editable() end
   if key:sub(1, 1) == 'i' and key ~= 'i' then return text_buffer() and api.nvim_get_current_line() ~= '' end
   if key == 'sw' then return text_buffer() and vim.fn.expand '<cword>' ~= '' end
-  if key == 'sm' or key == 'su' then return vim.fs.root(vim.fn.getcwd(), '.git') ~= nil end
+  if key == 'sm' then return vim.fs.root(vim.fn.getcwd(), '.git') ~= nil end
   if key == 'sr' then return #vim.v.oldfiles > 0 end
   if key == 'd' then return #vim.diagnostic.get(0) > 0 end
   return true
