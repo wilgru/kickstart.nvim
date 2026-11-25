@@ -80,4 +80,34 @@ for _, key in ipairs { '<leader>sc', '<leader>sf', '<leader>/', '<leader>so' } d
   assert(vim.api.nvim_get_current_win() == origin, 'Telescope did not restore the original window')
   assert(vim.o.laststatus == 3 and vim.o.cmdheight == 1 and vim.o.ruler and vim.o.showcmd, 'Editor bottom UI was not restored')
 end
+local file = 'status%file.lua'
+local dir = ('long-directory/'):rep(12) .. '最終'
+vim.api.nvim_buf_set_name(0, dir .. '/' .. file)
+vim.bo.modified = true
+local wide = statusline.section_filename { trunc_width = 140 }
+assert(wide:find('status%%file.lua %#MiniStatuslineFileinfo#', 1, true), 'Statusline does not put the filename first')
+local narrow = statusline.section_filename { trunc_width = 140, trim_width = vim.fn.strdisplaywidth(dir) - 5 }
+assert(narrow:find('status%%file.lua %#MiniStatuslineFileinfo#…最終%#MiniStatuslineFilename#', 1, true), 'Statusline clips the wrong part of the path')
+local rendered = vim.api.nvim_eval_statusline(narrow, { maxwidth = 100000 }).str
+assert(vim.endswith(rendered, '…最終 ●'), 'Statusline does not put exactly one space before the modified dot')
+
+builtin.find_files { find_command = { 'printf', '%s\\n', dir .. '/' .. file } }
+assert(vim.wait(3000, function() return vim.bo.filetype == 'TelescopePrompt' end), 'File picker did not open')
+local prompt = vim.api.nvim_get_current_buf()
+local picker = require('telescope.actions.state').get_current_picker(prompt)
+local row
+assert(vim.wait(3000, function()
+  for _, line in ipairs(vim.api.nvim_buf_get_lines(picker.results_bufnr, 0, -1, false)) do
+    if line:find(file, 1, true) then row = line; return true end
+  end
+end), 'File picker did not render the result')
+assert(row:find(file .. ' …', 1, true) and vim.endswith(row, '最終'), 'File picker clips the wrong part of the path: ' .. row)
+assert(vim.fn.strdisplaywidth(row) <= vim.api.nvim_win_get_width(picker.results_win), 'Clipped result exceeds the picker width')
+local entry = picker.finder.results[1]
+local display, highlights = entry.display(entry)
+local icon = display:match('^%S+')
+assert(wide:find('%#' .. highlights[1][2] .. '#' .. icon .. '%#MiniStatuslineFilename# ', 1, true), 'File icon does not match Telescope')
+assert(highlights[2][2] == 'TelescopePathName' and highlights[3][2] == 'TelescopePathDirectory', 'Picker path highlights are missing')
+assert(entry.value == dir .. '/' .. file, 'Path formatting changed the underlying filename')
+require('telescope.actions').close(prompt)
 print('Telescope and Fyler: keymap tests passed')

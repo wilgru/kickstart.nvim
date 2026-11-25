@@ -1,5 +1,6 @@
 -- guess-indent, gitsigns, which-key, colorscheme, todo-comments, mini modules
-local gh = require('config.util').gh
+local util = require 'config.util'
+local gh = util.gh
 
 do
   -- [[ Installing and Configuring Plugins ]]
@@ -143,9 +144,11 @@ do
         MiniStatuslineGitAdded = { fg = palette.green.bright, bg = 'NONE' },
         MiniStatuslineGitChanged = { fg = palette.yellow.base, bg = 'NONE' },
         MiniStatuslineGitRemoved = { fg = palette.red.base, bg = 'NONE' },
-        MiniStatuslineModified = { fg = palette.yellow.base, bg = 'NONE' },
+        MiniStatuslineModified = { fg = palette.blue.base, bg = 'NONE' },
         MiniStatuslineFileinfo = { fg = palette.gray.base, bg = 'NONE' },
         MiniStatuslineFilename = { fg = 'fg1', bg = 'NONE' },
+        TelescopePathName = { fg = 'fg1' },
+        TelescopePathDirectory = { fg = palette.gray.base },
         MiniStatuslineCommand = { fg = '#000000', bg = palette.gray.base },
         MiniStatuslineCommandCap = { fg = palette.gray.base, bg = 'NONE' },
       },
@@ -280,12 +283,9 @@ do
         local width = vim.o.laststatus == 3 and vim.o.columns or vim.api.nvim_win_get_width(0)
         local overflow = display_width(statusline.combine_groups(groups)) - width
         if overflow > 0 then
-          local branch_width = display_width(groups[2].strings[1])
-          local filename_width = display_width(groups[4].strings[1])
-          -- Share the necessary clipping between the branch and path.
-          local branch_trim = math.min(math.max(0, branch_width - 1), math.ceil(overflow * branch_width / math.max(1, branch_width + filename_width)))
-          groups[2].strings[1] = statusline.section_git { trunc_width = 40, trim_width = branch_trim }
-          groups[4].strings[1] = statusline.section_filename { trunc_width = 140, trim_width = overflow - branch_trim }
+          groups[4].strings[1] = statusline.section_filename { trunc_width = 140, trim_width = overflow }
+          local remaining = display_width(statusline.combine_groups(groups)) - width
+          if remaining > 0 then groups[2].strings[1] = statusline.section_git { trunc_width = 40, trim_width = remaining } end
         end
         groups[6] = '%='
         return statusline.combine_groups(groups)
@@ -321,16 +321,27 @@ do
       local path = vim.api.nvim_buf_get_name(0):gsub('^fyler[^:]*://', '')
       return clip(path, vim.fn.strdisplaywidth(path) - (args.trim_width or 0), true):gsub('%%', '%%%%')
     end
-    local icon = ''
-    if vim.g.have_nerd_font and vim.bo.filetype ~= '' and vim.bo.buftype == '' then
-      icon = MiniIcons.get('filetype', vim.bo.filetype) .. ' '
-    end
-    local modified = vim.bo.modified and '  %#MiniStatuslineModified#%#MiniStatuslineFilename#' or ''
+    local modified = vim.bo.modified and ' %#MiniStatuslineModified#●%#MiniStatuslineFilename#' or ''
     local filename = section_filename(args):gsub('%%m', function() return modified end)
     return (filename:gsub('%%[fFt]', function(item)
-      local path = vim.api.nvim_eval_statusline(item, {}).str
-      local max_width = vim.fn.strdisplaywidth(path) - (args.trim_width or 0)
-      return icon .. clip(path, max_width, true):gsub('%%', '%%%%')
+      local path = vim.api.nvim_eval_statusline(item, { maxwidth = 100000 }).str
+      if vim.bo.buftype ~= '' then return (path:gsub('%%', '%%%%')) end
+      local name, dir = util.file_parts(path)
+      local icon = ''
+      if vim.g.have_nerd_font then
+        local bufname = vim.api.nvim_buf_get_name(0)
+        local glyph, hl
+        if bufname ~= '' then
+          glyph, hl = MiniIcons.get('file', vim.fs.basename(bufname))
+        elseif vim.bo.filetype ~= '' then
+          glyph, hl = MiniIcons.get('filetype', vim.bo.filetype)
+        end
+        if glyph then icon = '%#' .. hl .. '#' .. glyph .. '%#MiniStatuslineFilename# ' end
+      end
+      local trim = args.trim_width or 0
+      if trim > 0 then dir = util.clip_directory(dir, vim.fn.strdisplaywidth(dir) - trim) end
+      local suffix = dir == '' and '' or ' %#MiniStatuslineFileinfo#' .. dir:gsub('%%', '%%%%') .. '%#MiniStatuslineFilename#'
+      return icon .. name:gsub('%%', '%%%%') .. suffix
     end))
   end
 
@@ -357,7 +368,7 @@ do
   statusline.section_fileinfo = function(args)
     local info = section_fileinfo(args)
     if statusline.is_truncated(args.trunc_width) or vim.bo.buftype ~= '' then return '' end
-    -- Keep only encoding, format, and size; the filetype icon precedes the path.
+    -- Keep only encoding, format, and size; the filetype icon precedes the filename.
     info = info:match('(%S*%[[^%]]+%] %S+)$') or ''
     if not vim.g.have_nerd_font then return info end
     -- Decorate the default encoding[format] size suffix.

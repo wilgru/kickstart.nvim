@@ -1,4 +1,5 @@
-local gh = require('config.util').gh
+local util = require 'config.util'
+local gh = util.gh
 
 do
   -- [[ Fuzzy Finder (files, lsp, etc) ]]
@@ -36,9 +37,38 @@ do
   -- NOTE: You can install multiple plugins at once
   vim.pack.add(telescope_plugins)
 
+  local get_status = require('telescope.state').get_status
+  local function display_path(opts, path)
+    if vim.startswith(path, '/') then
+      path = vim.fs.relpath(opts.cwd or vim.uv.cwd(), path) or path
+    else
+      path = path:gsub('^%./', '')
+    end
+    local name, dir = util.file_parts(path)
+    local status = get_status(vim.api.nvim_get_current_buf())
+    if dir ~= '' and status and vim.api.nvim_win_is_valid(status.results_win) then
+      local picker = status.picker
+      local gutter = math.max(vim.fn.strdisplaywidth(picker.entry_prefix), vim.fn.strdisplaywidth(picker.selection_caret))
+      local width = vim.api.nvim_win_get_width(status.results_win) - gutter
+      local reserved = opts.__prefix or opts.path_display_reserve or (opts.disable_devicons and 0 or 2)
+      dir = util.clip_directory(dir, width - reserved - vim.fn.strdisplaywidth(name) - 1)
+    end
+    local text = dir == '' and name or name .. ' ' .. dir
+    return text, {
+      { { 0, #name }, 'TelescopePathName' },
+      { { #name, #text }, 'TelescopePathDirectory' },
+    }
+  end
+
   -- See `:help telescope` and `:help telescope.setup()`
   require('telescope').setup {
-    defaults = { preview = false },
+    defaults = { preview = false, path_display = display_path },
+    pickers = {
+      git_status = { path_display_reserve = 4 },
+      -- Leave room for the match text and line/column after the path.
+      live_grep = { path_display_reserve = 24 },
+      grep_string = { path_display_reserve = 24 },
+    },
     extensions = {
       ['ui-select'] = { require('telescope.themes').get_dropdown() },
     },
