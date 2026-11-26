@@ -107,4 +107,52 @@ assert(wide:find('%#' .. highlights[1][2] .. '#' .. icon .. '%#MiniStatuslineFil
 assert(highlights[2][2] == 'TelescopePathName' and highlights[3][2] == 'TelescopePathDirectory', 'Picker path highlights are missing')
 assert(entry.value == dir .. '/' .. file, 'Path formatting changed the underlying filename')
 require('telescope.actions').close(prompt)
+for _, name in ipairs { 'live_grep', 'grep_string' } do
+  local opts = require('telescope.config').pickers[name]
+  local entry = require('telescope.make_entry').gen_from_vimgrep(opts) 'telescope.lua:42:7:example'
+  local text, highlights = entry:display()
+  local found = false
+  for _, highlight in ipairs(highlights) do
+    if highlight[2] == 'TelescopeResultsLineNr' then
+      assert(text:sub(highlight[1][1] + 1, highlight[1][2]) == '42:7', 'Wrong search location highlight')
+      assert(text:find('telescope.lua 42:7 example', 1, true), 'Search locations and preview should be separated by spaces')
+      found = true
+    end
+  end
+  assert(found, 'Search location highlight is missing: ' .. name)
+end
+local buffer = vim.api.nvim_create_buf(true, false)
+builtin.buffers()
+assert(vim.wait(3000, function() return vim.bo.filetype == 'TelescopePrompt' end), 'Buffer picker did not open')
+local buffer_prompt = vim.api.nvim_get_current_buf()
+local entry = require('telescope.make_entry').gen_from_buffer { bufnr_width = 3 } {
+  bufnr = buffer,
+  flag = ' ',
+  info = vim.fn.getbufinfo(buffer)[1],
+}
+local text, highlights = entry:display()
+local found = false
+for _, highlight in ipairs(highlights) do
+  if highlight[2] == 'TelescopeResultsLineNr' then
+    assert(text:sub(highlight[1][1] + 1, highlight[1][2]) == tostring(entry.lnum), 'Wrong buffer location highlight')
+    assert(not text:find(':' .. entry.lnum, 1, true), 'Buffer location should be separated by a space')
+    found = true
+  end
+end
+assert(found, 'Open buffer location highlight is missing')
+require('telescope.actions').close(buffer_prompt)
+vim.api.nvim_buf_delete(buffer, { force = true })
+local location = require('telescope.make_entry').gen_from_quickfix {} {
+  filename = 'telescope.lua', lnum = 42, col = 7, text = 'example',
+}
+local location_text, location_highlights = location:display()
+assert(location_text:find('telescope.lua 42:7 example', 1, true), 'Quickfix/LSP locations should be separated by spaces')
+local location_hl = location_highlights[#location_highlights]
+assert(location_hl[2] == 'TelescopeResultsLineNr', 'Quickfix/LSP location highlight is missing')
+assert(
+  vim.api.nvim_get_hl(0, { name = 'TelescopeResultsLineNr', link = false }).fg
+    == vim.api.nvim_get_hl(0, { name = 'TelescopePathDirectory', link = false }).fg,
+  'Search locations should match the grey directory colour'
+)
+
 print('Telescope and Fyler: keymap tests passed')

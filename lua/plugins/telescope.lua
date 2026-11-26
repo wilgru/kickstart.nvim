@@ -60,6 +60,38 @@ do
     }
   end
 
+  -- These factories are shared by buffers, grep, quickfix, and LSP location pickers.
+  -- Wrap the factories rather than individual pickers so their options still apply.
+  local make_entry = require 'telescope.make_entry'
+  for _, factory in ipairs { 'gen_from_buffer', 'gen_from_vimgrep', 'gen_from_quickfix' } do
+    local original = make_entry[factory]
+    make_entry[factory] = function(opts)
+      local create = original(opts)
+      return function(value)
+        local entry = create(value)
+        if not entry then return end
+        local display = entry.display
+        entry.display = function(item)
+          local text, highlights = display(item)
+          if opts and opts.disable_coordinates then return text, highlights end
+          local coordinates = tostring(item.lnum)
+          if factory ~= 'gen_from_buffer' and item.col then coordinates = coordinates .. ':' .. item.col end
+          local start, finish = text:find(':' .. coordinates, 1, true)
+          if start then
+            text = text:sub(1, start - 1) .. ' ' .. text:sub(start + 1)
+            if text:sub(finish + 1, finish + 1) == ':' then
+              text = text:sub(1, finish) .. ' ' .. text:sub(finish + 2)
+            end
+            highlights = highlights or {}
+            table.insert(highlights, { { start, finish }, 'TelescopeResultsLineNr' })
+          end
+          return text, highlights
+        end
+        return entry
+      end
+    end
+  end
+
   -- See `:help telescope` and `:help telescope.setup()`
   require('telescope').setup {
     defaults = { preview = false, path_display = display_path },

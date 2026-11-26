@@ -208,6 +208,7 @@ do
         MiniStatuslineFilename = { fg = 'fg1', bg = 'NONE' },
         TelescopePathName = { fg = 'fg1' },
         TelescopePathDirectory = { fg = palette.gray.base },
+        TelescopeResultsLineNr = { fg = palette.gray.base },
         MiniStatuslineCommand = { fg = '#000000', bg = palette.gray.base },
         MiniStatuslineCommandCap = { fg = palette.gray.base, bg = 'NONE' },
       },
